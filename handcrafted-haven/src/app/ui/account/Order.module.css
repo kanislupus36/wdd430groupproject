@@ -1,0 +1,65 @@
+.orderList {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.orderCard {
+  background: rgba(0, 0, 0, 0.03);
+  border-left: 4px solid rgba(0, 0, 0, 0.7);
+  padding: 12px; /* Reducido para hacerlo más pequeño */
+  margin-bottom: 10px; /* Menor margen entre los elementos */
+  border-radius: 6px;
+  font-family: "Neuton", serif;
+  max-width: 600px; /* Reducido el max-width para hacerlo más compacto */
+  margin-left: auto;
+  margin-right: auto;
+  text-align: left;
+  font-size: 0.9rem; /* Tamaño de texto reducido */
+}
+
+.orderTitle {
+  font-size: 1.2rem; /* Reducido el tamaño del título */
+  margin-bottom: 0.3rem; /* Reducido el margen inferior */
+  font-weight: 500;
+  color: #000;
+}
+
+.orderAmount {
+  font-size: 1rem; /* Reducido el tamaño del monto */
+  color: #333;
+  margin-bottom: 0.8rem; /* Reducido el margen inferior */
+}
+
+.cancelOrderButton {
+  padding: 6px 12px; /* Reducido padding */
+  background-color: #000;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem; /* Reducido el tamaño de la fuente */
+  cursor: pointer;
+  font-family: "Neuton", serif;
+  letter-spacing: 1px;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.cancelOrderButton:hover {
+  background-color: #92aa83;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+}
+
+@media (max-width: 768px) {
+  .orderTitle {
+    font-size: 1rem; /* Menor tamaño para pantallas pequeñas */
+  }
+
+  .orderAmount {
+    font-size: 0.9rem; /* Menor tamaño para pantallas pequeñas */
+  }
+
+  .cancelOrderButton {
+    font-size: 0.8rem;
+    padding: 5px 10px; /* Más pequeño para pantallas pequeñas */
+  }
+}

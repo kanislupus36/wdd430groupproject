@@ -1,0 +1,119 @@
+@import url("https://fonts.googleapis.com/css2?family=Neuton:ital,wght@0,200;0,300;0,400;0,700;0,800;1,400&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Neuton:ital,wght@0,200;0,300;0,400;0,700;0,800;1,400&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap");
+
+.wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.title {
+  color: #000000e6;
+  font-family: "Neuton", serif;
+  font-size: 2.5rem;
+  font-weight: 500;
+  text-align: left;
+  margin: 5% 0%;
+}
+
+/* 🔹 Filters Section */
+.filters {
+  font-family: "Roboto", sans-serif;
+  display: flex;
+  justify-content: right;
+  align-items: center;
+  gap: 15px;
+  margin: 5% 0%;
+}
+
+.filters label {
+  font-weight: bold;
+  margin-right: 5px;
+}
+
+.filters select {
+  padding: 5px;
+  font-size: 1rem;
+  border-radius: 5px;
+}
+
+/* 🔹 Product Grid */
+.productList {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  list-style: none;
+  padding: 0;
+  margin: 8% 0%;
+}
+
+.productItem {
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  padding: 15px;
+  background: #f9f9f9;
+  text-align: center;
+  transition: transform 0.2s ease-in-out;
+}
+
+.productItem:hover {
+  transform: scale(1.05);
+}
+
+.productItem h2 {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+}
+
+.productItem p {
+  font-size: 1rem;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+.productItem img {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 5px;
+  margin-bottom: 10px;
+}
+
+.button {
+  font-family: "Roboto", serif;
+  padding: 8px 16px;
+  background-color: #000;
+  border: none;
+  color: #fff;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  cursor: pointer;
+  border-radius: 4px;
+  font-weight: 500;
+  font-size: 1.2rem;
+  letter-spacing: 1px;
+  min-width: 100px;
+}
+
+.button:hover {
+  background-color: #92aa83;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+@media (max-width: 768px) {
+  .filters {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .productList {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .productList {
+    grid-template-columns: 1fr;
+  }
+}
