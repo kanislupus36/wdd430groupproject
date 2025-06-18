@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 // Supabase client using service role key for insert operations
 const supabase = createClient(
   process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_ANON_KEY!
 );
 
 export async function POST(request: Request) {
