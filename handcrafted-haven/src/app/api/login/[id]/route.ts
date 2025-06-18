@@ -1,31 +1,35 @@
-/* eslint-disable padded-blocks */
 import { NextRequest, NextResponse } from "next/server";
-import { Pool } from "pg";
+import { createClient } from "@supabase/supabase-js";
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+const supabaseUrl = process.env.SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!; // use service role key for server
+
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const email = decodeURIComponent(url.pathname.split("/").pop() || "");
-  console.log("email", email);
-  console.log("url", url.pathname.split("/").pop() || "");
 
   if (!email) {
     return NextResponse.json({ error: "email not found" }, { status: 400 });
   }
 
   try {
-    const result = await pool.query("SELECT * FROM users WHERE email = $1", [
-      email,
-    ]);
+    const { data, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("email", email)
+      .single();
 
-    if (result.rows.length === 0) {
-      return NextResponse.json({ error: "user not found" }, { status: 404 });
+    if (error) {
+      if (error.code === "PGRST116") {
+        // No rows found
+        return NextResponse.json({ error: "user not found" }, { status: 404 });
+      }
+      throw error;
     }
 
-    return NextResponse.json(result.rows[0]);
+    return NextResponse.json(data);
   } catch (err) {
     console.error("Error:", err);
     return NextResponse.json({ error: "server error" }, { status: 500 });
@@ -41,16 +45,21 @@ export async function DELETE(req: NextRequest) {
   }
 
   try {
-    const result = await pool.query(
-      "DELETE FROM users WHERE email = $1 RETURNING *",
-      [email]
-    );
+    const { data, error } = await supabase
+      .from("users")
+      .delete()
+      .eq("email", email)
+      .select()
+      .single();
 
-    if (result.rowCount === 0) {
-      return NextResponse.json({ error: "user not found" }, { status: 404 });
+    if (error) {
+      if (error.code === "PGRST116") {
+        return NextResponse.json({ error: "user not found" }, { status: 404 });
+      }
+      throw error;
     }
 
-    return NextResponse.json({ message: "user deleted successfully" });
+    return NextResponse.json({ message: "user deleted successfully", user: data });
   } catch (err) {
     console.error("Error:", err);
     return NextResponse.json({ error: "server error" }, { status: 500 });

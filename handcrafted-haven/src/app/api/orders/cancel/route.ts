@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { Pool } from "pg";
+import { createClient } from "@supabase/supabase-js";
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+const supabaseUrl = process.env.SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function POST(request: Request) {
   try {
@@ -17,18 +17,27 @@ export async function POST(request: Request) {
       );
     }
 
-    const sql = "UPDATE orders SET status = 'cancelled' WHERE order_id = $1 RETURNING *";
-    const result = await pool.query(sql, [order_id]);
+    // Update the order status to 'cancelled'
+    const { data, error } = await supabase
+      .from("orders")
+      .update({ status: "cancelled" })
+      .eq("order_id", order_id)
+      .select()
+      .single();
 
-    if (result.rows.length === 0) {
-      return NextResponse.json(
-        { error: "Unable to cancel order - No matching record found" },
-        { status: 404 }
-      );
+    if (error) {
+      if (error.code === "PGRST116") {
+        // No matching record found
+        return NextResponse.json(
+          { error: "Unable to cancel order - No matching record found" },
+          { status: 404 }
+        );
+      }
+      throw error;
     }
 
     return NextResponse.json(
-      { message: "Order Cancelled", data: result.rows[0] },
+      { message: "Order Cancelled", data },
       { status: 200 }
     );
   } catch (error) {

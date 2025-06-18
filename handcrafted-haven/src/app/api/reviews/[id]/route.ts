@@ -1,22 +1,34 @@
 import { NextResponse, NextRequest } from "next/server";
-import { query } from "../../../../lib/db";
+import { createClient } from "@supabase/supabase-js";
+
+// Initialize Supabase server client
+const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const productId = url.pathname.split("/")[3];
 
-  try {
-    const result = await query(
-      "SELECT r.review_id, r.rating, r.comment, u.username FROM reviews r JOIN users u ON r.user_id = u.user_id WHERE r.product_id = $1",
-      [productId]
-    );
+  if (!productId) {
+    return NextResponse.json({ error: "Product ID is required" }, { status: 400 });
+  }
 
-    return NextResponse.json(result.rows);
+  try {
+    const { data, error } = await supabase
+      .from("reviews")
+      .select("review_id, rating, comment, users(username)")
+      .eq("product_id", productId);
+
+    if (error) {
+      console.error("Supabase error:", error);
+      return NextResponse.json({ error: "Failed to fetch reviews" }, { status: 500 });
+    }
+
+    return NextResponse.json(data, { status: 200 });
   } catch (error) {
-    console.error("Database error:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    console.error("Unexpected error:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

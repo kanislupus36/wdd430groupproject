@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { Pool } from "pg";
+import { createClient } from "@supabase/supabase-js";
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+const supabaseUrl = process.env.SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function POST(request: Request) {
   try {
@@ -16,16 +16,25 @@ export async function POST(request: Request) {
       );
     }
 
-    const sql = "DELETE FROM products WHERE product_id = $1 RETURNING *";
+    const { data, error } = await supabase
+      .from("products")
+      .delete()
+      .eq("product_id", product_id)
+      .select()
+      .single(); // get the deleted row
 
-    const result = await pool.query(sql, [product_id]);
-
-    if (result.rows.length === 0) {
-      throw new Error("Unable to Delete Product - No matching record found");
+    if (error) {
+      if (error.code === "PGRST116") {
+        return NextResponse.json(
+          { message: "Unable to Delete Product - No matching record found" },
+          { status: 404 }
+        );
+      }
+      throw error;
     }
 
     return NextResponse.json(
-      { message: "Product Removed", data: result.rows[0] },
+      { message: "Product Removed", data },
       { status: 201 }
     );
   } catch (error) {

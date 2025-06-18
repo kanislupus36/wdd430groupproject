@@ -1,28 +1,36 @@
 import { NextResponse, NextRequest } from "next/server";
-import { query } from "../../../../lib/db";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
-  const productId = url.pathname.split("/")[3];
+  const productId = url.pathname.split("/")[3]; // or use params if using dynamic routes
+
+  if (!productId) {
+    return NextResponse.json({ message: "Missing product ID" }, { status: 400 });
+  }
 
   try {
-    const result = await query("SELECT * FROM products WHERE product_id = $1", [
-      productId,
-    ]);
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("product_id", productId)
+      .single();
 
-    if (result.rows.length === 0) {
-      return NextResponse.json(
-        { message: "Product not found" },
-        { status: 404 }
-      );
+    if (error) {
+      if (error.code === "PGRST116") {
+        return NextResponse.json({ message: "Product not found" }, { status: 404 });
+      }
+      throw error;
     }
 
-    return NextResponse.json(result.rows[0]);
+    return NextResponse.json(data, { status: 200 });
   } catch (error) {
-    console.error("Database error:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    console.error("Supabase error:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

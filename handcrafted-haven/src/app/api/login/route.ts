@@ -1,32 +1,35 @@
-/* eslint-disable padded-blocks */
 import { NextResponse } from "next/server";
-import { Pool } from "pg";
+import { createClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+const supabaseUrl = process.env.SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function POST(request: Request) {
   const { email, password } = await request.json();
 
   try {
-    const result = await pool.query("SELECT * FROM users WHERE email = $1", [
-      email,
-    ]);
+    // Fetch user by email
+    const { data: user, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("email", email)
+      .single();
 
-    if (result.rows.length === 0) {
-      return NextResponse.json({ message: "User not found" }, { status: 401 });
+    if (error) {
+      if (error.code === "PGRST116") {
+        // No user found
+        return NextResponse.json({ message: "User not found" }, { status: 401 });
+      }
+      throw error;
     }
 
-    const user = result.rows[0];
+    // Check password
     const validPassword = await bcrypt.compare(password, user.password);
 
     if (!validPassword) {
-      return NextResponse.json(
-        { message: "Incorrect password" },
-        { status: 401 }
-      );
+      return NextResponse.json({ message: "Incorrect password" }, { status: 401 });
     }
 
     return NextResponse.json({ message: "Login successful", role: user.role });

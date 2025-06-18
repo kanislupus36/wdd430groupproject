@@ -1,19 +1,28 @@
-/* eslint-disable */
 import { NextResponse } from "next/server";
-import { query } from "../../../lib/db";
-import { Pool } from "pg";
+import { createClient } from "@supabase/supabase-js";
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+// Initialize Supabase server client
+const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
-
+// GET: Fetch all products
 export async function GET() {
   try {
-    const result = await query("SELECT * FROM products");
-    return NextResponse.json(result.rows);
+    const { data, error } = await supabase.from("products").select("*");
+
+    if (error) {
+      console.error("Supabase fetch error:", error);
+      return NextResponse.json(
+        { error: "Failed to fetch products" },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json(data);
   } catch (error) {
-    console.error("Database query error:", error);
+    console.error("Unexpected error:", error);
     return NextResponse.json(
       { error: "Failed to fetch products" },
       { status: 500 }
@@ -21,30 +30,43 @@ export async function GET() {
   }
 }
 
+// POST: Create a new product
 export async function POST(request: Request) {
-  const { user_id, 
-    title, 
-    price, 
-    category, 
-    description,
-    images } = await request.json();
-  
+  const { user_id, title, price, category, description, images } =
+    await request.json();
+
+  // Validate input
   if (!user_id || !title || !price || !category || !description || !images) {
     return NextResponse.json({ message: "Missing fields" }, { status: 400 });
   }
 
-  const sql = "INSERT INTO products (user_id, title, price, category, description, images) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *"
-  
   try {
-    const result = await pool.query(sql,
-      [user_id, title, price, category, description, images]
-    );
-    
-    if (!result){
-      throw new Error ("Unable to add product")
+    const { data, error } = await supabase
+      .from("products")
+      .insert([
+        {
+          user_id,
+          title,
+          price,
+          category,
+          description,
+          images,
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Supabase insert error:", error);
+      return NextResponse.json({ message: "Error adding Product" }, { status: 500 });
     }
-    return NextResponse.json({ message: "Product Added" }, { status: 201 });
+
+    return NextResponse.json(
+      { message: "Product Added", product: data },
+      { status: 201 }
+    );
   } catch (error) {
+    console.error("Unexpected error:", error);
     return NextResponse.json({ message: "Error adding Product" }, { status: 500 });
   }
 }
